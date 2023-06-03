@@ -12,6 +12,26 @@ Nodes have the following syntax:
 
 ## Attributes
 
+### page attributes
+
+Attributes can be specified at the page level to set global configuration.
+These must always be declared before the `doc` item, and must be enclosed
+within a global attribute block (`#[attributes...]`).
+
+eg.
+
+```lisp
+#[
+	(layout default)
+	(author bob)
+	(date 2000-01-01T15:36:55)
+]
+
+(doc)
+```
+
+### Node attributes
+
 Any node can have additional attributes added to it. Attributes must always
 be specified immediately following the nodes name, and must be enclosed within
 an attribute block (`[attributes...]`).
