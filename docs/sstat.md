@@ -103,6 +103,9 @@ being automatically determined based on how deeply nested this `title` tag is.
 It, unlike the [`header`](#header) node, *will* appear in the table of
 contents.
 
+The content of the very first `title` node (the only `h1` element on the page)
+will also be used as the page's title in the browser.
+
 `title` nodes should probably be the first child of their parent node.
 
 ```lisp
