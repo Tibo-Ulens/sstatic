@@ -6,3 +6,4 @@ description = "sstat markup language parser"
 license-file = "../LICENSE"
 
 [dependencies]
+unicode-xid = "0.2.4"
