@@ -1,0 +1,124 @@
+(* -- LEXICAL GRAMMAR -- *)
+
+newline = ?r"\n"?;
+whitespace = ?r"\s"?;
+
+identifier = ?XID_START?, { ?XID_CONTINUE? };
+
+comment = ";;", ?r"[^\n]*"?, newline;
+
+(* -- SYNTACTIC GRAMMAR -- *)
+
+(* attributes *)
+attribute_block = "[", attributes, "]";
+
+fnoteref_attributes =
+	"[",
+		( "ref_id", identifier )
+		| ( "(", "ref_id", identifier ")", { parenthesized_attribute } )
+	"]"
+;
+fnotedef_attributes =
+	"[",
+		( "id", identifier )
+		| ( "(", "id", identifier ")", { parenthesized_attribute } )
+	"]"
+;
+
+link_attributes =
+	"[",
+		( "href", identifier )
+		| ( "(", "href", identifier ")", { parenthesized_attribute } )
+	"]"
+;
+ref_attributes =
+	"[",
+		( "ref_id", identifier )
+		| ( "(", "ref_id", identifier ")", { parenthesized_attribute } )
+	"]"
+;
+
+attributes =
+	singular_attribute
+	| ( parenthesized_attribute, { parenthesized_attribute } )
+;
+singular_attribute = attribute_name, { attribute_value };
+parenthesized_attribute = "(", singular_attribute ")";
+
+attribute_name = identifier;
+attribute_value =
+	identifier
+	| ( "(", identifier, { identifier }, ")" )
+;
+
+(* page *)
+page = [ attribute_block ], document_node;
+
+document_node =
+	"(", "doc", [ attribute_block ], { node } ")"
+;
+
+node =
+	"(",
+		sec_node | title_node | p_node
+		| list_node | ordlist_node | li_node
+		| dlist_node | dterm_node | ddesc_node
+		| header_node
+		| important_node | note_node | tip_node | caution_node | warning_node
+		| table_node
+		| image_node
+		| blockquote_node | codeblock_node
+		| fnotes_node | fnote_node | fnoteref_node | fnotedef_node
+		| div_node | html_node
+		| b_node | i_node | mono_node | sub_node | sup_node | br_node
+		| link_node | ref_node
+		| span_node,
+	")"
+;
+
+sec_node = "sec", [ attribute_block ], { node };
+title_node = "title", [ attribute_block ], { node };
+p_node = "p", [ attribute_block ], { node };
+
+list_node = "list", [ attribute_block ], { node };
+ordlist_node = "ordlist", [ attribute_block ], { node };
+li_node = "li", [ attribute_block ], { node };
+
+dlist_node = "dlist", [ attribute_block ], { node };
+dterm_node = "dterm", [ attribute_block ], { node };
+ddesc_node = "ddesc", [ attribute_block ], { node };
+
+header_node = "header", [ attribute_block ], { node };
+
+important_node = "important", [ attribute_block ], { node };
+note_node = "note", [ attribute_block ], { node };
+tip_node = "tip", [ attribute_block ], { node };
+caution_node = "caution", [ attribute_block ], { node };
+warning_node = "warning", [ attribute_block ], { node };
+
+table_node = ?TODO?;
+
+image_node = ?TODO?;
+
+blockquote_node = ?TODO?;
+codeblock_node = ?TODO?;
+
+fnotes_node = "fnotes", [ attribute_block ], { node };
+fnote_node = "fnote", [ attribute_block ], { node };
+fnoteref_node = "fnoteref", [ fnoteref_attributes ], { node };
+fnotedef_node = "fnotedef", [ fnotedef_attributes ], { node };
+
+div_node = "div", [ attribute_block ], { node };
+html_node = "html", [ attribute_block ], { node };
+
+b_node = "b", [ attribute_block ], { node };
+i_node = "i", [ attribute_block ], { node };
+mono_node = "mono", [ attribute_block ], { node };
+sub_node = "sub", [ attribute_block ], { node };
+sup_node = "sup", [ attribute_block ], { node };
+br_node = "br", [ attribute_block ];
+
+link_node = "link", [ link_attributes ], { node };
+ref_node = "ref", [ ref_attributes ], { node };
+
+span_node = "span", [ attribute_block ], { node };
