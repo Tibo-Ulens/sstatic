@@ -16,12 +16,14 @@ Nodes have the following syntax:
 
 Attributes can be specified at the page level to set global configuration.
 These must always be declared before the `doc` item, and must be enclosed
-within a global attribute block (`#[attributes...]`).
+within an attribute block (`[attributes...]`).
+
+Only one global attribute block is allowed per page.
 
 eg.
 
 ```lisp
-#[
+[
 	(layout default)
 	(author bob)
 	(date 2000-01-01T15:36:55)
@@ -53,6 +55,7 @@ eg.
 ```
 
 Would produce the following HTML code
+
 ```html
 <main id="main" class="__sstat-main" style="background-color: black">
 		<p class="__sstat-paragraph simple-p">
