@@ -7,7 +7,7 @@ Each element in an S-stat document is called a 'node'.
 Nodes have the following syntax:
 
 ```lisp
-(node-name [attributes...] children...)
+(node-name [attributes]... children...)
 ```
 
 ## Attributes
@@ -16,18 +16,16 @@ Nodes have the following syntax:
 
 Attributes can be specified at the page level to set global configuration.
 These must always be declared before the `doc` item, and must be enclosed
-within an attribute block (`[attributes...]`).
+within an attribute block (`[attribute]`).
 
 Only one global attribute block is allowed per page.
 
 eg.
 
 ```lisp
-[
-	(layout default)
-	(author bob)
-	(date 2000-01-01T15:36:55)
-]
+[layout default]
+[author bob]
+[date 2000-01-01T15:36:55]
 
 (doc)
 ```
@@ -36,15 +34,15 @@ eg.
 
 Any node can have additional attributes added to it. Attributes must always
 be specified immediately following the nodes name, and must be enclosed within
-an attribute block (`[attributes...]`).
+an attribute block (`[attribute]`).
 
 eg.
 
 ```lisp
-(doc [
-	(id main)
-	(style (background-color black))
-]
+(doc
+	[id main]
+	[style (background-color black)]
+
 	(p [class simple-p] ;; a single attribute doesn't need to be parenthesized
 		cool and interesting example paragraph
 	)
@@ -409,11 +407,11 @@ Separated footnote references and definitions.
 
 	this text references footnote 2 (fnoteref [ref_id 2])
 
-	(fnotedef [(id 1)]
+	(fnotedef [id 1]
 		footnote 1
 	)
 
-	(fnotedef [(id 2)]
+	(fnotedef [id 2]
 		footnote 2
 	)
 
@@ -468,7 +466,7 @@ A block level div element.
 Mostly used when needing to apply custom properties to a group of elements.
 
 ```lisp
-(div [(class cool-custom-styles)]
+(div [class cool-custom-styles]
 	(p all of these paragraphs)
 	(p will be styled with)
 	(p cool custom styles)
@@ -610,7 +608,7 @@ will have a different class than the node intened to be used for
 table of contents)
 
 ```lisp
-(link [(id example-link) (href https://example.com)] a link to example.com)
+(link [id example-link] [href https://example.com] a link to example.com)
 ```
 
 Renders to:
@@ -629,7 +627,7 @@ Required attributes:
  - ref_id: the ID of the node to reference
 
 ```lisp
-(ref [(href #example-lin)] a link to the previous link)
+(ref [href #example-lin] a link to the previous link)
 ```
 
 Renders to:
@@ -644,7 +642,7 @@ An inline span element.
 Mostly used when needing to apply custom properties to an inline element.
 
 ```lisp
-(p this paragraph has some (span [(id funky)] funky) text in it)
+(p this paragraph has some (span [id funky] funky) text in it)
 ```
 
 Renders to:
