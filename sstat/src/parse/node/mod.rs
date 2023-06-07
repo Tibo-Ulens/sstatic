@@ -1,8 +1,8 @@
 //! AST types for document nodes
 
-use super::*;
-
 mod node_inner;
+
+use super::*;
 pub(crate) use node_inner::*;
 
 /// A generic identifier

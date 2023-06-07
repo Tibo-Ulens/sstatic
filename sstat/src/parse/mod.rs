@@ -3,6 +3,8 @@
 use std::cell::RefCell;
 use std::path::{Path, PathBuf};
 
+use unicode_xid::UnicodeXID;
+
 mod location;
 mod node;
 mod token;
@@ -10,7 +12,6 @@ mod token;
 pub(crate) use location::*;
 pub(crate) use node::*;
 pub(crate) use token::*;
-use unicode_xid::UnicodeXID;
 
 use crate::{Error, ParseError};
 
