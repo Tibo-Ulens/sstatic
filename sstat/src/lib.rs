@@ -13,7 +13,7 @@
 #![feature(let_chains)]
 #![feature(type_alias_impl_trait)]
 
-use std::path::Path;
+use codespan_reporting::files::SimpleFile;
 
 mod error;
 pub mod parse;
@@ -22,14 +22,14 @@ pub mod parse;
 mod test;
 
 pub use error::*;
-use parse::{FileInfo, Parser};
+use parse::Parser;
 
 /// Transpile the given source from S-Stat to HTML
-pub fn transpile(file_name: &str, file_path: &Path, file_src: &str) -> Result<(), Error> {
-    let file_info = FileInfo::new(file_name, file_path, file_src);
-    file_info.init_thread_local();
+pub fn transpile(filename: String, source: String) -> Result<(), Error> {
+    let file = SimpleFile::new(filename, source);
+    let parser = Parser::new(file);
 
-    let _ = Parser::parse_page(file_src);
+    parser.parse()?;
 
-    todo!()
+    Ok(())
 }

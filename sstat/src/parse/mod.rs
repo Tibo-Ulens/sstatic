@@ -1,21 +1,21 @@
 //! AST type definitions
 
-use std::cell::RefCell;
 use std::path::{Path, PathBuf};
 
+use codespan_reporting::files::SimpleFile;
 use unicode_xid::UnicodeXID;
 
 mod location;
 mod node;
 mod token;
 
-pub(crate) use location::*;
+pub use location::*;
 pub(crate) use node::*;
 pub(crate) use token::*;
 
-use crate::{Error, ParseError};
+use crate::{ParseError, ParseErrorType};
 
-type ParseResult<'i, T> = Result<(&'i str, (T, Span)), ErrorKind<Error>>;
+type ParseResult<'i, T> = Result<(&'i str, (T, Span)), ErrorKind<ParseError>>;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum ErrorKind<E> {
@@ -23,76 +23,27 @@ pub(crate) enum ErrorKind<E> {
     Failure(E),
 }
 
-thread_local! {
-    /// A thread local [`FileInfo`] struct for the current file
-    static FILE_INFO: RefCell<FileInfo> = RefCell::new(FileInfo {
-        file_name: String::new(),
-        file_path: PathBuf::new(),
-        file_src: String::new(),
-        lines: Vec::new(),
-    });
+/// Wrapper around all the information needed for parsing
+#[derive(Clone)]
+pub(crate) struct Parser {
+    file: SimpleFile<String, String>,
 }
-
-/// All of the information about a specific file
-#[derive(Clone, Debug)]
-pub(crate) struct FileInfo {
-    /// The name of the file
-    file_name: String,
-    /// The path to the file
-    file_path: PathBuf,
-    /// The source code of the file
-    file_src: String,
-    /// The start index of each line
-    lines: Vec<usize>,
-}
-
-impl FileInfo {
-    /// Create a new [`FileInfo`] struct
-    pub(crate) fn new(file_name: &str, file_path: &Path, file_src: &str) -> Self {
-        let mut lines = vec![0];
-        let mut total = 0;
-        for ch in file_src.chars() {
-            total += 1;
-            if ch == '\n' {
-                lines.push(total);
-            }
-        }
-
-        Self {
-            file_name: file_name.to_owned(),
-            file_path: file_path.to_owned(),
-            file_src: file_src.to_owned(),
-            lines,
-        }
-    }
-
-    /// Initialize the thread local [`FileInfo`] struct
-    pub(crate) fn init_thread_local(self) {
-        FILE_INFO.with(|f| {
-            *f.borrow_mut() = self;
-        });
-    }
-
-    /// Get the [`Location`] in the source file given an offset from the start
-    pub(crate) fn offset_location(&self, offset: usize) -> Location {
-        match self.lines.binary_search(&offset) {
-            Ok(idx) => Location {
-                line: idx + 1,
-                column: 0,
-            },
-            Err(idx) => Location {
-                line: idx,
-                column: offset - self.lines[idx - 1],
-            },
-        }
-    }
-}
-
-pub(crate) struct Parser;
 
 impl Parser {
+    /// Make a new [`Parser`]
+    pub(crate) fn new(file: SimpleFile<String, String>) -> Self {
+        Self { file }
+    }
+
+    fn make_error(&self, span: Span, ty: ParseErrorType) -> ParseError {
+        ParseError::new(self.file.clone(), span, ty)
+    }
+
     /// Keep applying a given combinator as long as it succeeds
-    fn many<'i, O, F>(combinator: F) -> impl Fn(&'i str, usize) -> ParseResult<Vec<(O, Span)>>
+    fn many<'i, O, F>(
+        &self,
+        combinator: F,
+    ) -> impl Fn(&'i str, usize) -> ParseResult<Vec<(O, Span)>>
     where
         F: Fn(&'i str, usize) -> ParseResult<O>,
     {
@@ -112,23 +63,37 @@ impl Parser {
                         input = rest;
                     }
                     Err(ErrorKind::Error(_)) => return Ok((input, (values, span))),
-                    Err(e) => return Err(e),
+                    Err(ErrorKind::Failure(_)) => return Ok((input, (values, span))),
                 }
             }
         }
     }
 
+    /// Attempts to apply a combinator, returning [`None`] on failure
+    fn optional<'i, O, F>(&self, combinator: F) -> impl Fn(&'i str, usize) -> ParseResult<Option<O>>
+    where
+        F: Fn(&'i str, usize) -> ParseResult<O>,
+    {
+        move |input: &str, start: usize| match combinator(input, start) {
+            Ok((rest, (o, span))) => Ok((rest, (Some(o), span))),
+            Err(_) => Ok((input, (None, Span::new(start, start)))),
+        }
+    }
+
     /// Match an exact tag
-    fn tag(tag: &str) -> impl Fn(&str, usize) -> ParseResult<&str> + '_ {
+    fn tag<'p, 'i: 'p>(
+        &'p self,
+        tag: &'i str,
+    ) -> impl Fn(&'i str, usize) -> ParseResult<&'i str> + '_ {
         move |input: &str, start: usize| {
             let tag_len = tag.len();
             if tag_len > input.len() {
-                return Err(ErrorKind::Failure(
-                    ParseError::UnexpectedEof {
+                return Err(ErrorKind::Failure(self.make_error(
+                    Span::new(start, start + input.len()),
+                    ParseErrorType::UnexpectedEof {
                         expected: tag.to_owned(),
-                    }
-                    .into(),
-                ));
+                    },
+                )));
             }
 
             let (i_tag, rest) = input.split_at(tag_len);
@@ -138,18 +103,18 @@ impl Parser {
                 return Ok((rest, (i_tag, span)));
             }
 
-            Err(ErrorKind::Error(
-                ParseError::UnexpectedToken {
+            Err(ErrorKind::Error(self.make_error(
+                Span::new(start, start + tag_len),
+                ParseErrorType::UnexpectedToken {
                     expected: tag.to_owned(),
                     found: i_tag.to_owned(),
-                }
-                .into(),
-            ))
+                },
+            )))
         }
     }
 
     /// Returns the longest input slice that matches the predicate
-    fn take_while<F>(pred: F) -> impl Fn(&str, usize) -> ParseResult<&str>
+    fn take_while<F>(&self, pred: F) -> impl Fn(&str, usize) -> ParseResult<&str>
     where
         F: Fn(char) -> bool,
     {
@@ -172,24 +137,26 @@ impl Parser {
     }
 
     /// Helper function that consumes all leading whitespace and/or comments
-    fn take_non_parseable() -> impl Fn(&str, usize) -> ParseResult<()> {
+    fn take_non_parseable(&self) -> impl Fn(&str, usize) -> ParseResult<()> + '_ {
         move |input: &str, start: usize| {
-            let (rest, (_, span)) = Self::many(Self::take_comment())(input, start)?;
+            let (rest, (_, span)) = self.many(self.take_comment())(input, start)?;
 
             Ok((rest, ((), span)))
         }
     }
 
     /// Take a comment along with its leading whitespace
-    fn take_comment() -> impl Fn(&str, usize) -> ParseResult<()> {
+    fn take_comment(&self) -> impl Fn(&str, usize) -> ParseResult<()> + '_ {
         move |mut input: &str, start: usize| {
             let mut span = Span { start, end: start };
 
             // Consume any leading whitespace
-            match Self::take_while(|c| c.is_ascii_whitespace())(input, span.end) {
+            match self.take_while(|c| c.is_ascii_whitespace())(input, span.end) {
                 Ok((rest, (_, s))) => {
                     if s.end - s.start < 1 {
-                        return Err(ErrorKind::Error(ParseError::RawUnexpectedEof.into()));
+                        return Err(ErrorKind::Error(
+                            self.make_error(s, ParseErrorType::RawUnexpectedEof),
+                        ));
                     }
 
                     input = rest;
@@ -199,7 +166,7 @@ impl Parser {
             };
 
             // Check for comments
-            match Self::tag(";;")(input, span.end) {
+            match self.tag(";;")(input, span.end) {
                 Ok((rest, (_, s))) => {
                     input = rest;
                     span.end = s.end;
@@ -208,7 +175,7 @@ impl Parser {
             }
 
             // If there is a comment, consume till end-of-line
-            match Self::take_while(|c| c != '\n')(input, span.end) {
+            match self.take_while(|c| c != '\n')(input, span.end) {
                 Ok((rest, (_, s))) => {
                     input = rest;
                     span.end = s.end;

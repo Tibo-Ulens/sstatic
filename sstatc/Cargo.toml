@@ -6,3 +6,4 @@ description = "sstat static site generator"
 license-file = "../LICENSE"
 
 [dependencies]
+sstat = { path="../sstat" }

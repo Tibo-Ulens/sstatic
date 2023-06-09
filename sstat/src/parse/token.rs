@@ -37,5 +37,8 @@ define_delimiters! {
 }
 
 define_keywords! {
-    "doc" Doc /// The top level document node
+    "doc"   Doc   /// The top level document node
+    "sec"   Sec   /// A section
+    "title" Title /// A title
+    "p"     P     /// A paragraph
 }

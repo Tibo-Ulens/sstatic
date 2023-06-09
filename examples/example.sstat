@@ -1,0 +1,10 @@
+[title example page]
+[author tibo]
+
+(doc
+	(sec
+		(title first section woohoo)
+
+		(p first paragraph also woohoo)
+	)
+)

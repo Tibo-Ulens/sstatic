@@ -2,7 +2,14 @@
 mod test {
     use std::assert_matches::assert_matches;
 
+    use codespan_reporting::files::SimpleFile;
+
     use crate::parse::*;
+
+    fn dummy_parser(src: &str) -> Parser {
+        let file = SimpleFile::new("filepath".to_owned(), src.to_owned());
+        Parser::new(file)
+    }
 
     #[test]
 	#[rustfmt::skip]
@@ -17,7 +24,8 @@ mod test {
 			rest
 		";
 
-		let result = Parser::parse_page(input);
+		let parser = dummy_parser(input);
+		let result = parser.parse_page();
 		assert_matches!(result, Ok(_));
 
 		let (rest, (page, span)) = result.unwrap();
@@ -69,7 +77,8 @@ mod test {
 	fn parse_attribute() {
 		let input = "[example_name (lots of example values)] rest";
 
-		let result = Parser::parse_attribute()(input, 0);
+		let parser = dummy_parser(input);
+		let result = parser.parse_attribute()(input, 0);
 		assert_matches!(result, Ok(_));
 
 		let (rest, (attr, span)) = result.unwrap();
@@ -93,7 +102,8 @@ mod test {
 	fn parse_attribute_no_value() {
 		let input = "[example_name] rest";
 
-		let result = Parser::parse_attribute()(input, 0);
+		let parser = dummy_parser(input);
+		let result = parser.parse_attribute()(input, 0);
 		assert_matches!(result, Ok(_));
 
 		let (rest, (attr, span)) = result.unwrap();
@@ -118,7 +128,8 @@ mod test {
         let input = "  ;; comment
 		(doc) rest";
 
-        let result = Parser::parse_doc_node()(input, 0);
+		let parser = dummy_parser(input);
+        let result = parser.parse_doc_node()(input, 0);
         assert_matches!(result, Ok(_));
 
         let (rest, (doc, span)) = result.unwrap();

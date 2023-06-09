@@ -1,43 +1,49 @@
-//! AST location info types and helpers
+//! AST types for location info
 
-use crate::parse::FILE_INFO;
+use std::path::PathBuf;
+
+/// All information about the location of a specific item
+#[derive(Clone, Debug)]
+pub struct Location {
+    /// The location of the file in which the item occurs
+    pub file_path: PathBuf,
+    /// The lines of source code encompassing this item
+    pub lines: Vec<String>,
+    /// The location of the start of this item
+    pub start: LineCol,
+    /// The location of the end of this item
+    pub end: LineCol,
+    /// The region of source code spanned by this item
+    pub span: Span,
+}
 
 /// Information about where a given AST node is located in the source file
-#[derive(Clone, Copy, Debug)]
-pub(crate) struct Location {
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct LineCol {
     /// The line on which the node starts
-    pub(crate) line: usize,
+    pub line: usize,
     /// The column on which node starts
-    pub(crate) column: usize,
+    pub column: usize,
 }
 
 /// A specific region of source code
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) struct Span {
+pub struct Span {
     /// The start of the span
-    pub(crate) start: usize,
+    pub start: usize,
     /// The end of the span
-    pub(crate) end: usize,
+    pub end: usize,
+}
+
+impl From<Span> for std::ops::Range<usize> {
+    fn from(value: Span) -> Self {
+        value.start..value.end
+    }
 }
 
 impl Span {
-    pub(crate) fn new(start: usize, end: usize) -> Self {
+    /// Make a new [`Span`]
+    pub fn new(start: usize, end: usize) -> Self {
         Self { start, end }
-    }
-
-    /// Get the [`Location`] of the start of this [`Span`]
-    pub(crate) fn start(&self) -> Location {
-        FILE_INFO.with(|fi| {
-            let fi = fi.borrow();
-            fi.offset_location(self.start)
-        })
-    }
-
-    /// Get the [`Location`] of the end of this [`Span`]
-    pub(crate) fn end(&self) -> Location {
-        FILE_INFO.with(|fi| {
-            let fi = fi.borrow();
-            fi.offset_location(self.end)
-        })
     }
 }

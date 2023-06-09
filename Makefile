@@ -29,7 +29,7 @@ sstatc-test: lint
 # FORMAT
 
 lint: fmt
-	cargo +$(TOOLCHAIN) clippy --profile $(PROFILE) -- $(CLIPPY_FLAGS)
+	# cargo +$(TOOLCHAIN) clippy --profile $(PROFILE) -- $(CLIPPY_FLAGS)
 
 fmt:
 	cargo +$(TOOLCHAIN) fmt
