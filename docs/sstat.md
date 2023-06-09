@@ -282,32 +282,110 @@ Similar code is produced for the other admonition tags, but with the
 `"admonition-important"` class and the content of the `"admonition-label"` div
 changed to reflect the type of admonition.
 
-## `table`
+## `table`, `thead`, `tfoot`, `trow`, and `tcell`
 
-TODO
+A table and its contents.
 
-a table
+```lisp
+(table
+	(thead (trow (tcell Product) (tcell Price_)))
+
+	(trow (tcell Eggs) (tcell 10))
+	(trow (tcell Milk) (tcell 5))
+
+	(tfoot (trow (tcell Total:) (tcell 15)))
+)
+```
+
+Renders to:
+
+```html
+<table class="__sstat-table">
+	<thead class="__sstat-table-head">
+		<tr class="__sstat-table-head-row">
+			<th class=__sstat-table-head-cell>Product</th>
+			<th class=__sstat-table-head-cell>Price</th>
+		</tr>
+	</thead>
+
+	<tr class="__sstat-table-row">
+		<td class="__sstat-table-cell">Eggs</td>
+		<td class="__sstat-table-cell">10</td>
+	</tr>
+	<tr class="__sstat-table-row">
+		<td class="__sstat-table-cell">Milk</td>
+		<td class="__sstat-table-cell">5</td>
+	</tr>
+
+	<tfoot class="__sstat-table-foot">
+		<tr class="__sstat-table-foot-row">
+			<th class="__sstat-table-foot-cell">Total:</th>
+			<th class="__sstat-table-foot-cell">15</th>
+		</tr>
+	</tfoot>
+</table>
+```
 
 ## `image`
 
-TODO
+An image.
 
-probably produce an HTML `figure` tag
-will probably need `src`, `alt`, and maybe `caption` attributes
+Required attributes:
+ - src: The path to the source of the image
+ - alt: Alt text for the image
+ - caption: A caption for the image
+
+```lisp
+(image [src image.webp] [alt cool image] [caption an image with cool things])
+```
+
+Renders to:
+
+```html
+<figure clas="__sstat-figure">
+	<img class="__sstat-image" src="image.webp" alt="cool image">
+	<figcaption class="__sstat-figure-caption">an image with cool things</figcaption>
+</figure>
+```
 
 ## `blockquote`
 
-TODO
+A block quote
 
-a block quote
-will probably need a `source`/`cite` attribute
+Required attributes:
+ - cite: The reference for the citation
+
+```lisp
+(blockquote [cite me] this is a cool element)
+```
+
+Renders to:
+
+```html
+<blockquote class="__sstat-blockquote" cite="me">
+	this is a cool element
+</blockquote>
+```
 
 ## `codeblock`
 
-TODO
+A codeblock
 
-a codeblock
-will probably need a `lang` attribute
+```lisp
+(codeblock
+	for i in range(10):
+		print(i)
+)
+```
+
+Renders to:
+
+```html
+<pre class="__sstat-codeblock">
+	for i in range(10):
+		print(i)
+</pre>
+```
 
 ## Footnotes
 

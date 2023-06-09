@@ -22,66 +22,71 @@ document_node =
 ;
 
 node =
-	"(",
-		sec_node | title_node | p_node
-		| list_node | ordlist_node | li_node
-		| dlist_node | dterm_node | ddesc_node
-		| header_node
-		| important_node | note_node | tip_node | caution_node | warning_node
-		| table_node
-		| image_node
-		| blockquote_node | codeblock_node
-		| fnotes_node | fnote_node | fnoteref_node | fnotedef_node
-		| div_node | html_node
-		| b_node | i_node | mono_node | sub_node | sup_node | br_node
-		| link_node | ref_node
-		| span_node,
-	")"
+	raw_text
+	| sec_node | title_node | p_node
+	| list_node | ordlist_node | li_node
+	| dlist_node | dterm_node | ddesc_node
+	| header_node
+	| important_node | note_node | tip_node | caution_node | warning_node
+	| table_node | thead_node | tfoot_node | trow_node | tcell_node
+	| image_node
+	| blockquote_node | codeblock_node
+	| fnotes_node | fnote_node | fnoteref_node | fnotedef_node
+	| div_node | html_node
+	| b_node | i_node | mono_node | sub_node | sup_node | br_node
+	| link_node | ref_node
+	| span_node
 ;
 
-sec_node = "sec", { attribute }, { node };
-title_node = "title", { attribute }, { node };
-p_node = "p", { attribute }, { node };
+raw_text = ?TEXT?;
 
-list_node = "list", { attribute }, { node };
-ordlist_node = "ordlist", { attribute }, { node };
-li_node = "li", { attribute }, { node };
+sec_node =  "(", "sec",    { attribute }, { node }, ")";
+title_node = "(", "title", { attribute }, { node }, ")";
+p_node =     "(", "p",     { attribute }, { node }, ")";
 
-dlist_node = "dlist", { attribute }, { node };
-dterm_node = "dterm", { attribute }, { node };
-ddesc_node = "ddesc", { attribute }, { node };
+list_node =    "(", "list",    { attribute }, { li_node }, ")";
+ordlist_node = "(", "ordlist", { attribute }, { li_node }, ")";
+li_node =      "(", "li",      { attribute }, { node }, ")";
 
-header_node = "header", { attribute }, { node };
+dlist_node = "(", "dlist", { attribute }, { node }, ")";
+dterm_node = "(", "dterm", { attribute }, { node }, ")";
+ddesc_node = "(", "ddesc", { attribute }, { node }, ")";
 
-important_node = "important", { attribute }, { node };
-note_node = "note", { attribute }, { node };
-tip_node = "tip", { attribute }, { node };
-caution_node = "caution", { attribute }, { node };
-warning_node = "warning", { attribute }, { node };
+header_node = "(", "header", { attribute }, { node }, ")";
 
-table_node = ?TODO?;
+important_node = "(", "important", { attribute }, { node }, ")";
+note_node =      "(", "note",      { attribute }, { node }, ")";
+tip_node =       "(", "tip",       { attribute }, { node }, ")";
+caution_node =   "(", "caution",   { attribute }, { node }, ")";
+warning_node =   "(", "warning",   { attribute }, { node }, ")";
 
-image_node = ?TODO?;
+table_node = "(", "table", { attribute }, [ thead_node ], { trow_node }, [ tfoot_node ], ")";
+thead_node = "(", "thead", { attribute }, { trow_node }, ")";
+tfoot_node = "(", "tfoot", { attribute }, { trow_node }, ")";
+trow_node =  "(", "trow",  { attribute }, { tcell_node } ")";
+tcell_node = "(", "tcell", { attribute }, { node } ")";
 
-blockquote_node = ?TODO?;
-codeblock_node = ?TODO?;
+image_node = "(", "image", { attribute }, ")";
 
-fnotes_node = "fnotes", { attribute }, { node };
-fnote_node = "fnote", { attribute }, { node };
-fnoteref_node = "fnoteref", { attribute }, { node };
-fnotedef_node = "fnotedef", { attribute }, { node };
+blockquote_node = "(", "blockquote", { attribute }, raw_text, ")";
+codeblock_node =  "(", "codeblock",  { attribute }, raw_text, ")";
 
-div_node = "div", { attribute }, { node };
-html_node = "html", { attribute }, { node };
+fnotes_node =   "(", "fnotes",   { attribute }, { node }, ")";
+fnote_node =    "(", "fnote",    { attribute }, { node }, ")";
+fnoteref_node = "(", "fnoteref", { attribute }, ")";
+fnotedef_node = "(", "fnotedef", { attribute }, { node }, ")";
 
-b_node = "b", { attribute }, { node };
-i_node = "i", { attribute }, { node };
-mono_node = "mono", { attribute }, { node };
-sub_node = "sub", { attribute }, { node };
-sup_node = "sup", { attribute }, { node };
-br_node = "br", { attribute };
+div_node =  "(", "div",  { attribute }, { node }, ")";
+html_node = "(", "html", { attribute }, { raw_text }, ")";
 
-link_node = "link", { attribute }, { node };
-ref_node = "ref", { attribute }, { node };
+b_node =    "(", "b",    { attribute }, { node }, ")";
+i_node =    "(", "i",    { attribute }, { node }, ")";
+mono_node = "(", "mono", { attribute }, { node }, ")";
+sub_node =  "(", "sub",  { attribute }, { node }, ")";
+sup_node =  "(", "sup",  { attribute }, { node }, ")";
+br_node =   "(", "br",   { attribute }, ")";
 
-span_node = "span", { attribute }, { node };
+link_node = "(", "link", { attribute }, { node }, ")";
+ref_node =  "(", "ref",  { attribute }, { node }, ")";
+
+span_node = "(", "span", { attribute }, { node }, ")";
